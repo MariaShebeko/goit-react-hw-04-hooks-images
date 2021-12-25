@@ -28,35 +28,37 @@ export default function App() {
 
       imageAPI
         .fetchImage(imageName, page)
-        .then(data => {
-          return data.hits;
-        })
         .then(resImages => {
           if (resImages.length === 0) {
             toastify('Nothing found on your request!');
           } else {
             setImages([...images, ...resImages]);
             setStatus('resolved');
-            setLoading(false);
             setModalUrl(resImages.largeImageURL);
           }
         })
         .catch(error => {
           setError(error);
           setStatus('rejected');
+        })
+        .finally(() => {
+          setLoading(false);
         });
     }
-  }, [imageName, page]);
+  }, [page, imageName]);
 
   const onLoadMore = () => {
     setLoading(true);
-    setPage(prev => prev + 1);
+    setPage(page + 1);
+
     const options = {
       top: null,
       behavior: 'smooth',
     };
     options.top = window.pageYOffset + document.documentElement.clientHeight;
     setTimeout(() => {
+      console.log('scrol');
+
       window.scrollTo(options);
     }, 1000);
   };
@@ -93,15 +95,13 @@ export default function App() {
       {status === 'idle' && (
         <div className={s.text}>Press the name of the image</div>
       )}
-
+      <ImageGallery images={images} onClick={onImageClick} />
       {status === 'pending' && <ImageLoader />}
 
       {status === 'rejected' && <ImageErrorView message={error.message} />}
 
       {status === 'resolved' && (
         <>
-          <ImageGallery images={images} onClick={onImageClick} />
-
           {showModal && (
             <Modal
               onClose={toggleModal}
